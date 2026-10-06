@@ -7,3 +7,5 @@ derivaciones.py
 docs/*.html
 docs/*.css
 docs/*.md
+docs/*.pptx
+*.mp4
