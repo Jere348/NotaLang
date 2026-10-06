@@ -12,10 +12,3 @@ test:
 clean:
 	rm -f gen/$(PREFIX)*.py gen/$(PREFIX)*.tokens gen/$(PREFIX)*.interp
 
-# informe y anexo en PDF
-informe:
-	python3 derivaciones.py --html
-	python3 -c "s=open('docs/anexo.html').read(); open('docs/_anexo.html','w').write(s.replace('<!--DERIVACIONES-->', open('docs/derivaciones.html').read()))"
-	weasyprint docs/informe.html docs/Informe_Hito1.pdf
-	weasyprint docs/_anexo.html docs/Anexo_Derivaciones.pdf
-	rm -f docs/_anexo.html docs/derivaciones.html
