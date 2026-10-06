@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>NotaLang - Presentación Hito 1</title>
+<style>
+  @page { size: 297mm 167mm; margin: 1.2cm 1.6cm; }
+  body { font-family: "Liberation Sans", Arial, sans-serif; font-size: 15pt; }
+  h1 { font-size: 26pt; color: #1f3b70; margin: 0 0 8pt; }
+  h2 { font-size: 22pt; color: #1f3b70; margin: 0 0 8pt; }
+  p, li { margin: 3pt 0; }
+  pre, code { font-family: "Liberation Mono", monospace; font-size: 13pt; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border: 1px solid #888; padding: 3pt 6pt; font-size: 12pt; text-align: left; }
+  th { background: #dbe4f3; }
+  .s { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>&nbsp;</h1>
+<h1 style="text-align:center; font-size:40pt">NotaLang</h1>
+<p style="text-align:center; font-size:20pt">Un lenguaje para el cálculo de notas y promedios ponderados</p>
+<p style="text-align:center">Teoría de Compiladores 2026-2 — Trabajo Parcial (Hito 1)</p>
+<p style="text-align:center">Integrantes: [Nombre 1] · [Nombre 2] · [Nombre 3] · [Nombre 4]</p>
+<p style="text-align:center">Prof. José Luis Soncco Álvarez</p>
+
+<h2 class="s">Problemática y motivación</h2>
+<ul>
+<li>Cada ciclo calculamos promedios ponderados y «¿cuánto necesito en el final?» a mano o en Excel.</li>
+<li>Errores frecuentes: pesos que no suman 100 %, notas fuera de 0–20, fórmulas mal copiadas.</li>
+<li>Excel no conoce el dominio: una nota de 25 es «un número válido».</li>
+<li><b>NotaLang</b>: describir cursos de forma declarativa y que el <b>compilador detecte</b> esos errores.</li>
+</ul>
+
+<h2 class="s">Objetivos</h2>
+<ul>
+<li>Definir el léxico y especificarlo con expresiones regulares en ANTLR4.</li>
+<li>Diseñar gramáticas libres de contexto no ambiguas y validarlas con derivaciones más a la izquierda.</li>
+<li>Implementar tabla de símbolos con ámbitos y un analizador semántico (Visitor).</li>
+<li>Verificar reglas del dominio: pesos = 100 %, notas en [0, 20], evaluaciones existentes.</li>
+</ul>
+
+<h2 class="s">Un programa en NotaLang</h2>
+<pre>curso Compiladores {
+    PC1 : 15% = 14;
+    TP  : 20% = 16.5;
+    PC2 : 15%;
+    TF  : 25%;
+    EB  : 25%;
+}
+var meta : decimal = 13;
+mostrar("Promedio parcial: ", promedio(Compiladores));
+mostrar("Necesito: ", necesito(Compiladores, meta));
+Compiladores.PC2 = 12;
+si (promedio(Compiladores) &gt;= 10.5) { mostrar("Vas aprobando"); } sino { mostrar("Cuidado"); }</pre>
+
+<h2 class="s">Construcciones del lenguaje</h2>
+<table>
+<tr><th>Construcción</th><th>Ejemplo</th></tr>
+<tr><td>C1 Declaración</td><td><code>var nota : decimal = 14.5;</code></td></tr>
+<tr><td>C2 Asignación</td><td><code>Compiladores.PC1 = 15;</code></td></tr>
+<tr><td>C3 Expresiones</td><td><code>promedio(C) &lt; 11 o C.EF == 0</code></td></tr>
+<tr><td>C4 Selectiva</td><td><code>si (p &gt;= 10.5) { ... } sino si (p &gt;= 8) { ... }</code></td></tr>
+<tr><td>C5 Iterativas</td><td><code>mientras (i &lt; 10) { ... }</code> · <code>para i desde 1 hasta n { ... }</code></td></tr>
+<tr><td>C6 Entrada / salida</td><td><code>leer(x);</code> · <code>mostrar("Prom: ", promedio(C));</code></td></tr>
+<tr><td>C7 Curso (dominio)</td><td><code>curso Calculo { PC : 40% = 12; EF : 60%; }</code></td></tr>
+</table>
+
+<h2 class="s">Analizador léxico</h2>
+<table>
+<tr><th>Token</th><th>Lexemas / patrón</th></tr>
+<tr><td>Palabras clave</td><td>var, curso, si, sino, mientras, para, desde, hasta, leer, mostrar, promedio, necesito</td></tr>
+<tr><td>Tipos</td><td>entero, decimal, texto, logico</td></tr>
+<tr><td>Operadores</td><td>+ - * / mod · &lt; &gt; &lt;= &gt;= == != · y o no · =</td></tr>
+<tr><td>NUM_ENT / NUM_DEC</td><td><code>[0-9]+</code> · <code>[0-9]+ '.' [0-9]+</code></td></tr>
+<tr><td>PORCENTAJE</td><td><code>[0-9]+ ('.' [0-9]+)? '%'</code></td></tr>
+<tr><td>CADENA / ID</td><td><code>'"' ~["\r\n]* '"'</code> · <code>[a-zA-Z_][a-zA-Z_0-9]*</code></td></tr>
+<tr><td>Ignorados</td><td>espacios, <code>// ...</code>, <code>/* ... */</code></td></tr>
+</table>
+<p>Cualquier otro carácter → <code>ERROR_LEXICO</code> con línea y columna.</p>
+
+<h2 class="s">Analizador sintáctico (extracto de la GLC)</h2>
+<pre><i>declCurso</i>     → <b>curso id {</b> <i>evaluaciones</i> <b>}</b>
+<i>evaluaciones</i>  → <i>evaluacion evaluaciones</i> | <i>evaluacion</i>
+<i>evaluacion</i>    → <b>id : porcentaje</b> <i>notaOpcional</i> <b>;</b>
+<i>notaOpcional</i>  → <b>=</b> <i>expr</i> | ε
+
+<i>exprArit</i>      → <i>exprArit opSuma termino</i> | <i>termino</i>
+<i>termino</i>       → <i>termino opMul factor</i> | <i>factor</i>
+<i>siStmt</i>        → <b>si (</b> <i>expr</i> <b>)</b> <i>bloque sinoParte</i>
+<i>sinoParte</i>     → <b>sino</b> <i>bloque</i> | <b>sino</b> <i>siStmt</i> | ε</pre>
+<ul>
+<li>Un no-terminal por nivel de precedencia; llaves obligatorias ⇒ sin <i>else</i> colgante.</li>
+</ul>
+
+<h2 class="s">Derivación más a la izquierda (ejemplo)</h2>
+<p><code>curso Calculo { PC : 40% = 12; EF : 60%; }</code></p>
+<pre><i>declCurso</i>
+⇒ <b>curso id {</b> <i>evaluaciones</i> <b>}</b>
+⇒ <b>curso id {</b> <i>evaluacion evaluaciones</i> <b>}</b>
+⇒ <b>curso id { id : porcentaje</b> <i>notaOpcional</i> <b>;</b> <i>evaluaciones</i> <b>}</b>
+⇒ <b>curso id { id : porcentaje =</b> <i>expr</i> <b>;</b> <i>evaluaciones</i> <b>}</b>
+⇒* <b>curso id { id : porcentaje = num_ent ;</b> <i>evaluaciones</i> <b>}</b>
+⇒ <b>curso id { id : porcentaje = num_ent ;</b> <i>evaluacion</i> <b>}</b>
+⇒ <b>curso id { id : porcentaje = num_ent ; id : porcentaje</b> <i>notaOpcional</i> <b>; }</b>
+⇒ <b>curso id { id : porcentaje = num_ent ; id : porcentaje ; }</b></pre>
+<p>36 derivaciones (4 por gramática) en el Anexo A.</p>
+
+<h2 class="s">Analizador semántico</h2>
+<table>
+<tr><th>Cód.</th><th>Error</th><th>Ejemplo</th></tr>
+<tr><td>E1</td><td>Identificador no declarado</td><td><code>b = a + 1;</code></td></tr>
+<tr><td>E2</td><td>Ya declarado en el ámbito / evaluación repetida</td><td><code>var x : entero; var x : decimal;</code></td></tr>
+<tr><td>E3</td><td>Tipos incompatibles en asignación</td><td><code>var edad : entero = 3.5;</code></td></tr>
+<tr><td>E4</td><td>Condición no lógica</td><td><code>si (n) { ... }</code></td></tr>
+<tr><td>E5</td><td>Pesos del curso ≠ 100 %</td><td><code>curso Q { PC1 : 30%; EF : 50%; }</code></td></tr>
+<tr><td>E6</td><td>Nota fuera de [0, 20]</td><td><code>T1 : 50% = 25;</code></td></tr>
+<tr><td>E7</td><td>Evaluación inexistente / no es curso</td><td><code>Ingles.ESCRITO = 15;</code></td></tr>
+<tr><td>E8</td><td>Operación con tipos incompatibles</td><td><code>"a" * 2</code></td></tr>
+</table>
+<p>Visitor de ANTLR + tabla de símbolos con pila de ámbitos (bloques y <code>para</code>).</p>
+
+<h2 class="s">Pruebas</h2>
+<pre>$ python3 main.py tests/err_sem5_pesos.nota
+Análisis léxico y sintáctico: OK
+=== ERRORES SEMÁNTICOS ===
+  [Error Semántico E5, línea 1] Los pesos del curso 'Quimica' suman 80% (deben sumar 100%)
+
+$ python3 main.py tests/err_lex1.nota
+=== ERRORES LÉXICOS ===
+  [Error Léxico, línea 1:19] carácter no reconocido '#'</pre>
+<ul>
+<li>16 archivos de prueba: 3 válidos, 2 léxicos, 3 sintácticos, 8 semánticos — todos con el resultado esperado.</li>
+<li><code>make test</code> ejecuta todas las pruebas.</li>
+</ul>
+
+<h2 class="s">Conclusiones y siguiente hito</h2>
+<ul>
+<li>Analizadores léxico, sintáctico y semántico funcionales, con 8 errores semánticos verificados.</li>
+<li>Las reglas del dominio (pesos, rango de notas) se detectan en compilación, no en ejecución.</li>
+<li>Siguiente: arquitectura del compilador, plan de validación y generación de código (LLVM) para ejecutar <code>promedio</code> y <code>necesito</code>.</li>
+</ul>
+
+</body>
+</html>

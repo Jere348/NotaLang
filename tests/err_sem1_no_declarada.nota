@@ -1,0 +1,3 @@
+var a : entero = 5;
+b = a + 1;
+mostrar(c);

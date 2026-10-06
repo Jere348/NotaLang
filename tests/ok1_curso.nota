@@ -1,0 +1,19 @@
+// Registro de notas de Teoria de Compiladores
+curso Compiladores {
+    PC1 : 15% = 14;
+    TP  : 20% = 16.5;
+    PC2 : 15%;
+    TF  : 25%;
+    EB  : 25%;
+}
+
+var meta : decimal = 13;
+mostrar("Promedio parcial: ", promedio(Compiladores));
+mostrar("Necesito en lo que falta: ", necesito(Compiladores, meta));
+
+Compiladores.PC2 = 12;
+si (promedio(Compiladores) >= 10.5) {
+    mostrar("Vas aprobando");
+} sino {
+    mostrar("Cuidado");
+}

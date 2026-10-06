@@ -1,0 +1,17 @@
+/* Promedio simple de n notas leidas por teclado */
+var n : entero;
+var suma : decimal = 0;
+var nota : decimal;
+leer(n);
+para i desde 1 hasta n {
+    leer(nota);
+    suma = suma + nota;
+}
+var prom : decimal = suma / n;
+si (prom >= 10.5 y no (prom > 20)) {
+    mostrar("Aprobado con ", prom);
+} sino si (prom >= 8) {
+    mostrar("Puede rendir sustitutorio");
+} sino {
+    mostrar("Desaprobado");
+}

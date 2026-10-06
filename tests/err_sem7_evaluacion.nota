@@ -1,0 +1,4 @@
+curso Ingles { ORAL : 100%; }
+var x : entero = 1;
+Ingles.ESCRITO = 15;
+mostrar(promedio(x));

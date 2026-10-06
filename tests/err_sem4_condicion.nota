@@ -1,0 +1,3 @@
+var n : entero = 3;
+si (n) { mostrar("n"); }
+mientras ("texto") { n = n - 1; }

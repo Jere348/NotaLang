@@ -1,0 +1,2 @@
+var x : entero = 10
+mostrar(x);

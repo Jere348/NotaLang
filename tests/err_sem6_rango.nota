@@ -1,0 +1,5 @@
+curso Historia {
+    T1 : 50% = 25;
+    T2 : 50%;
+}
+Historia.T2 = -3;

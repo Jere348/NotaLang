@@ -1,0 +1,4 @@
+var edad : entero = 3.5;
+var nombre : texto;
+nombre = 20;
+var d : decimal = 7;

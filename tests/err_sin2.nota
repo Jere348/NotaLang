@@ -1,0 +1,3 @@
+si (x > 3 {
+    mostrar("hola");
+}

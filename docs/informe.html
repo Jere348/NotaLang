@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>NotaLang - Informe Hito 1</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<!-- ============ PORTADA (editar los datos entre corchetes) ============ -->
+<section class="portada">
+  <div class="banda">
+    <div class="uni">[Nombre de la Universidad]</div>
+    <div class="facu">[Facultad] · [Carrera]</div>
+    <div class="kicker">Trabajo Parcial · Hito 1</div>
+    <div class="titulo">NotaLang</div>
+    <div class="sub">Un lenguaje de dominio específico para el registro de cursos y el cálculo de notas y promedios ponderados</div>
+  </div>
+  <div class="acento"></div>
+<div class="muestra"><span class="k">curso</span> Compiladores {
+    PC1 : 15% = 14;   TP : 20% = 16.5;   PC2 : 15%;   TF : 25%;   EB : 25%;
+}
+<span class="k">mostrar</span>(<span class="k">necesito</span>(Compiladores, 13));   <span class="c">// ¿cuánto me falta para llegar a 13?</span></div>
+  <table class="datos">
+    <tr><td>Curso</td><td>Teoría de Compiladores — Sección [XXXX]</td></tr>
+    <tr><td>Profesor</td><td>José Luis Soncco Álvarez</td></tr>
+    <tr><td>Integrantes</td><td>[Apellidos, Nombres] — [Código]<br>[Apellidos, Nombres] — [Código]<br>[Apellidos, Nombres] — [Código]<br>[Apellidos, Nombres] — [Código]</td></tr>
+    <tr><td>Repositorio</td><td>[https://github.com/usuario/NotaLang]</td></tr>
+  </table>
+  <div class="pie">Lima, octubre de 2026 · Periodo 2026-2</div>
+</section>
+
+<div class="doc-titulo">NotaLang — Informe del Trabajo Parcial (Hito 1)</div>
+
+<!-- ============ 1 ============ -->
+<h1><span class="num">1.</span>Problemática y motivación</h1>
+<p>Cada ciclo los estudiantes calculan su promedio en cursos con evaluaciones de distinto peso y necesitan saber
+cuánto les falta para aprobar. Normalmente esto se hace a mano o en una hoja de cálculo, lo que genera errores
+frecuentes: pesos que no suman 100&nbsp;%, notas fuera del rango 0–20 o fórmulas mal copiadas. Una hoja de cálculo
+no detecta estos problemas porque no conoce las reglas de una evaluación académica.</p>
+<p>NotaLang permite declarar cursos y evaluaciones de forma directa, registrar notas y obtener el promedio
+(<code>promedio</code>) o la nota necesaria (<code>necesito</code>). El compilador valida las reglas del dominio
+antes de ejecutar el programa.</p>
+
+<h1><span class="num">2.</span>Objetivos</h1>
+<p><b>General:</b> implementar en ANTLR4 los analizadores léxico, sintáctico y semántico de NotaLang.</p>
+<p><b>Específicos:</b></p>
+<ul>
+<li>Definir el léxico del lenguaje e implementarlo con expresiones regulares.</li>
+<li>Diseñar las gramáticas libres de contexto de cada construcción y validarlas con derivaciones más a la izquierda.</li>
+<li>Implementar la tabla de símbolos y la verificación de tipos y reglas del dominio.</li>
+<li>Probar cada analizador con entradas válidas e inválidas.</li>
+</ul>
+
+<!-- ============ 3 ============ -->
+<h1><span class="num">3.</span>Construcciones del lenguaje</h1>
+<p>Tipos de dato: <code>entero</code>, <code>decimal</code>, <code>texto</code>, <code>logico</code> y
+<code>curso</code>. Funciones del dominio: <code>promedio(C)</code> y <code>necesito(C, meta)</code>; <code>C.E</code>
+accede a la nota de la evaluación <code>E</code> del curso <code>C</code>.</p>
+<table>
+<tr><th style="width:27%">Construcción</th><th>Cinco ejemplos</th></tr>
+<tr><td><b>C1 · Declaración de variables</b></td><td><pre>var nota : decimal = 14.5;
+var n : entero;
+var nombre : texto = "Ana";
+var aprobado : logico = verdadero;
+var total : decimal = suma / n;</pre></td></tr>
+<tr><td><b>C2 · Asignación</b></td><td><pre>x = 10;
+prom = suma / n;
+Compiladores.PC1 = 15;
+ok = promedio(Calculo) >= 10.5;
+nombre = "Ana" + " Perez";</pre></td></tr>
+<tr><td><b>C3 · Expresiones</b><br>aritméticas, relacionales y lógicas</td><td><pre>a + b * 2
+(x - 1) / 2
+nota >= 10.5 y no fin
+promedio(C) &lt; 11 o C.EF == 0
+necesito(Calculo, 13) - n mod 2</pre></td></tr>
+<tr><td><b>C4 · Sentencia selectiva</b></td><td><pre>si (x > 3) { mostrar(x); }
+si (ok) { n = 1; } sino { n = 0; }
+si (p >= 10.5) { mostrar("A"); } sino si (p >= 8) { mostrar("S"); }
+si (a == b) { }
+si (no ok) { leer(x); } sino { x = 0; }</pre></td></tr>
+<tr><td><b>C5 · Sentencias iterativas</b></td><td><pre>mientras (i &lt; 10) { i = i + 1; }
+mientras (no ok y ef &lt;= 20) { ef = ef + 1; }
+para i desde 1 hasta 10 { mostrar(i); }
+para j desde a hasta b + 1 { s = s + j; }
+para i desde 1 hasta 3 { leer(nota); suma = suma + nota; }</pre></td></tr>
+<tr><td><b>C6 · Entrada y salida</b></td><td><pre>leer(x);
+leer(Compiladores.EB);
+mostrar("Hola");
+mostrar(a, b, c);
+mostrar("Necesitas ", necesito(C, 13), " en el EF");</pre></td></tr>
+<tr><td><b>C7 · Declaración de curso</b></td><td><pre>curso Arte { EF : 100%; }
+curso Calculo { PC : 40% = 12; EF : 60%; }
+curso Fisica { T1 : 50% = 14; T2 : 50% = 16.5; }
+curso Quimica { PC1 : 20%; PC2 : 20%; EF : 60% = 11; }
+curso Ingles { ORAL : 40% = 15.5; ESCRITO : 60%; }</pre></td></tr>
+</table>
+<p class="cap">Tabla 1. Construcciones de NotaLang.</p>
+
+<!-- ============ 4 ============ -->
+<h1><span class="num">4.</span>Analizador léxico</h1>
+<p>Tokens con lexema fijo (<i>token: lexemas</i>):</p>
+<div class="cols3">
+<div class="grupo"><table><tr><th colspan="2">Palabras clave</th></tr>
+<tr><td class="tok">VAR</td><td><code>var</code></td></tr><tr><td class="tok">CURSO</td><td><code>curso</code></td></tr>
+<tr><td class="tok">SI</td><td><code>si</code></td></tr><tr><td class="tok">SINO</td><td><code>sino</code></td></tr>
+<tr><td class="tok">MIENTRAS</td><td><code>mientras</code></td></tr><tr><td class="tok">PARA</td><td><code>para</code></td></tr>
+<tr><td class="tok">DESDE</td><td><code>desde</code></td></tr><tr><td class="tok">HASTA</td><td><code>hasta</code></td></tr>
+<tr><td class="tok">LEER</td><td><code>leer</code></td></tr><tr><td class="tok">MOSTRAR</td><td><code>mostrar</code></td></tr>
+<tr><td class="tok">PROMEDIO</td><td><code>promedio</code></td></tr><tr><td class="tok">NECESITO</td><td><code>necesito</code></td></tr>
+</table></div>
+<div class="grupo"><table><tr><th colspan="2">Tipos de dato</th></tr>
+<tr><td class="tok">ENTERO</td><td><code>entero</code></td></tr><tr><td class="tok">DECIMAL</td><td><code>decimal</code></td></tr>
+<tr><td class="tok">TEXTO</td><td><code>texto</code></td></tr><tr><td class="tok">LOGICO</td><td><code>logico</code></td></tr>
+</table></div>
+<div class="grupo"><table><tr><th colspan="2">Literales y operadores lógicos</th></tr>
+<tr><td class="tok">VERDADERO</td><td><code>verdadero</code></td></tr><tr><td class="tok">FALSO</td><td><code>falso</code></td></tr>
+<tr><td class="tok">Y · O · NO</td><td><code>y</code> · <code>o</code> · <code>no</code></td></tr>
+</table></div>
+<div class="grupo"><table><tr><th colspan="2">Operadores relacionales</th></tr>
+<tr><td class="tok">MENOR · MAYOR</td><td><code>&lt;</code> · <code>&gt;</code></td></tr>
+<tr><td class="tok">MENOR_IG · MAYOR_IG</td><td><code>&lt;=</code> · <code>&gt;=</code></td></tr>
+<tr><td class="tok">IGUAL · DISTINTO</td><td><code>==</code> · <code>!=</code></td></tr>
+</table></div>
+<div class="grupo"><table><tr><th colspan="2">Aritméticos y asignación</th></tr>
+<tr><td class="tok">MAS · MENOS</td><td><code>+</code> · <code>-</code></td></tr>
+<tr><td class="tok">POR · DIV · MOD</td><td><code>*</code> · <code>/</code> · <code>mod</code></td></tr>
+<tr><td class="tok">ASIGNA</td><td><code>=</code></td></tr>
+</table></div>
+<div class="grupo"><table><tr><th colspan="2">Delimitadores</th></tr>
+<tr><td class="tok">PAR_IZQ · PAR_DER</td><td><code>(</code> · <code>)</code></td></tr>
+<tr><td class="tok">LLAVE_IZQ · LLAVE_DER</td><td><code>{</code> · <code>}</code></td></tr>
+<tr><td class="tok">DOS_PUNTOS · PUNTO_COMA</td><td><code>:</code> · <code>;</code></td></tr>
+<tr><td class="tok">COMA · PUNTO</td><td><code>,</code> · <code>.</code></td></tr>
+</table></div>
+</div>
+<p>Tokens definidos con expresiones regulares:</p>
+<table>
+<tr><th style="width:17%">Token</th><th style="width:38%">Expresión regular (ANTLR4)</th><th>Lexemas de ejemplo</th></tr>
+<tr><td class="tok">NUM_ENT</td><td><code>[0-9]+</code></td><td><code>0</code>, <code>15</code>, <code>2026</code></td></tr>
+<tr><td class="tok">NUM_DEC</td><td><code>[0-9]+ '.' [0-9]+</code></td><td><code>10.5</code>, <code>14.25</code></td></tr>
+<tr><td class="tok">PORCENTAJE</td><td><code>[0-9]+ ('.' [0-9]+)? '%'</code></td><td><code>20%</code>, <code>12.5%</code></td></tr>
+<tr><td class="tok">CADENA</td><td><code>'"' ~["\r\n]* '"'</code></td><td><code>"Hola"</code>, <code>"Promedio: "</code></td></tr>
+<tr><td class="tok">ID</td><td><code>[a-zA-Z_] [a-zA-Z_0-9]*</code></td><td><code>nota</code>, <code>PC1</code>, <code>Compiladores</code></td></tr>
+<tr><td class="tok">(ignorados)</td><td><code>[ \t\r\n]+</code> · <code>'//' ~[\r\n]*</code> · <code>'/*' .*? '*/'</code></td><td>espacios y comentarios (<code>-&gt; skip</code>)</td></tr>
+</table>
+<div class="nota">Cualquier otro carácter se reporta como error léxico (<span class="tok">ERROR_LEXICO</span>) indicando línea y columna.</div>
+
+<!-- ============ 5 ============ -->
+<h1><span class="num">5.</span>Analizador sintáctico</h1>
+<p>No-terminales en <i>cursiva</i>, terminales en <b>negrita</b>; ε es la cadena vacía y <i>programa</i> el símbolo inicial.</p>
+<div class="gram cols2">
+<div class="g"><div class="gt">Programa</div>
+<div class="prod"><span class="lhs">programa</span><span class="ar">→</span><i>sentencias</i> <b>EOF</b></div>
+<div class="prod"><span class="lhs">sentencias</span><span class="ar">→</span><i>sentencia sentencias</i> | ε</div>
+<div class="prod"><span class="lhs">sentencia</span><span class="ar">→</span><i>declVar</i> | <i>asignacion</i> | <i>siStmt</i> | <i>mientrasStmt</i> | <i>paraStmt</i> | <i>leerStmt</i> | <i>mostrarStmt</i> | <i>declCurso</i> | <i>bloque</i></div>
+<div class="prod"><span class="lhs">bloque</span><span class="ar">→</span><b>{</b> <i>sentencias</i> <b>}</b></div></div>
+<div class="g"><div class="gt">C1 · Declaración</div>
+<div class="prod"><span class="lhs">declVar</span><span class="ar">→</span><b>var id :</b> <i>tipo inicializacion</i> <b>;</b></div>
+<div class="prod"><span class="lhs">tipo</span><span class="ar">→</span><b>entero</b> | <b>decimal</b> | <b>texto</b> | <b>logico</b></div>
+<div class="prod"><span class="lhs">inicializacion</span><span class="ar">→</span><b>=</b> <i>expr</i> | ε</div></div>
+<div class="g"><div class="gt">C2 · Asignación</div>
+<div class="prod"><span class="lhs">asignacion</span><span class="ar">→</span><i>destino</i> <b>=</b> <i>expr</i> <b>;</b></div>
+<div class="prod"><span class="lhs">destino</span><span class="ar">→</span><b>id</b> | <b>id . id</b></div></div>
+<div class="g"><div class="gt">C3 · Expresiones</div>
+<div class="prod"><span class="lhs">expr</span><span class="ar">→</span><i>expr</i> <b>o</b> <i>exprY</i> | <i>exprY</i></div>
+<div class="prod"><span class="lhs">exprY</span><span class="ar">→</span><i>exprY</i> <b>y</b> <i>exprNo</i> | <i>exprNo</i></div>
+<div class="prod"><span class="lhs">exprNo</span><span class="ar">→</span><b>no</b> <i>exprNo</i> | <i>exprRel</i></div>
+<div class="prod"><span class="lhs">exprRel</span><span class="ar">→</span><i>exprArit opRel exprArit</i> | <i>exprArit</i></div>
+<div class="prod"><span class="lhs">exprArit</span><span class="ar">→</span><i>exprArit opSuma termino</i> | <i>termino</i></div>
+<div class="prod"><span class="lhs">termino</span><span class="ar">→</span><i>termino opMul factor</i> | <i>factor</i></div>
+<div class="prod"><span class="lhs">factor</span><span class="ar">→</span><b>(</b> <i>expr</i> <b>)</b> | <b>-</b> <i>factor</i> | <b>num_ent</b> | <b>num_dec</b> | <b>cadena</b> | <b>verdadero</b> | <b>falso</b> | <b>id</b> | <b>id . id</b> | <b>promedio ( id )</b> | <b>necesito ( id ,</b> <i>expr</i> <b>)</b></div>
+<div class="prod"><span class="lhs">opRel</span><span class="ar">→</span><b>&lt;</b> | <b>&gt;</b> | <b>&lt;=</b> | <b>&gt;=</b> | <b>==</b> | <b>!=</b></div>
+<div class="prod"><span class="lhs">opSuma</span><span class="ar">→</span><b>+</b> | <b>-</b></div>
+<div class="prod"><span class="lhs">opMul</span><span class="ar">→</span><b>*</b> | <b>/</b> | <b>mod</b></div></div>
+<div class="g"><div class="gt">C4 · Selectiva</div>
+<div class="prod"><span class="lhs">siStmt</span><span class="ar">→</span><b>si (</b> <i>expr</i> <b>)</b> <i>bloque sinoParte</i></div>
+<div class="prod"><span class="lhs">sinoParte</span><span class="ar">→</span><b>sino</b> <i>bloque</i> | <b>sino</b> <i>siStmt</i> | ε</div></div>
+<div class="g"><div class="gt">C5 · Iterativas</div>
+<div class="prod"><span class="lhs">mientrasStmt</span><span class="ar">→</span><b>mientras (</b> <i>expr</i> <b>)</b> <i>bloque</i></div>
+<div class="prod"><span class="lhs">paraStmt</span><span class="ar">→</span><b>para id desde</b> <i>expr</i> <b>hasta</b> <i>expr bloque</i></div></div>
+<div class="g"><div class="gt">C6 · Entrada y salida</div>
+<div class="prod"><span class="lhs">leerStmt</span><span class="ar">→</span><b>leer (</b> <i>destino</i> <b>) ;</b></div>
+<div class="prod"><span class="lhs">mostrarStmt</span><span class="ar">→</span><b>mostrar (</b> <i>argumentos</i> <b>) ;</b></div>
+<div class="prod"><span class="lhs">argumentos</span><span class="ar">→</span><i>expr masArgumentos</i></div>
+<div class="prod"><span class="lhs">masArgumentos</span><span class="ar">→</span><b>,</b> <i>expr masArgumentos</i> | ε</div></div>
+<div class="g"><div class="gt">C7 · Curso</div>
+<div class="prod"><span class="lhs">declCurso</span><span class="ar">→</span><b>curso id {</b> <i>evaluaciones</i> <b>}</b></div>
+<div class="prod"><span class="lhs">evaluaciones</span><span class="ar">→</span><i>evaluacion evaluaciones</i> | <i>evaluacion</i></div>
+<div class="prod"><span class="lhs">evaluacion</span><span class="ar">→</span><b>id : porcentaje</b> <i>notaOpcional</i> <b>;</b></div>
+<div class="prod"><span class="lhs">notaOpcional</span><span class="ar">→</span><b>=</b> <i>expr</i> | ε</div></div>
+</div>
+
+<h2>Validación mediante derivaciones más a la izquierda</h2>
+<p>Cada gramática se validó con 4 derivaciones más a la izquierda (36 en total), incluidas en el
+<b>Anexo A</b> (<code>docs/Anexo_Derivaciones.pdf</code>). En C1, C2 y C4–C7, <i>expr</i> se abrevia con ⇒<sup>*</sup>,
+pues se valida en C3. Ejemplo:</p>
+<div class="card"><div class="ch"><b>Ejemplo (C7)</b><code>curso Calculo { PC : 40% = 12; EF : 60%; }</code></div><ol start="0">
+<li><span class="op"></span><i>declCurso</i></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id {</b> <i>evaluaciones</i> <b>}</b></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id {</b> <i>evaluacion evaluaciones</i> <b>}</b></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id { id : porcentaje</b> <i>notaOpcional</i> <b>;</b> <i>evaluaciones</i> <b>}</b></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id { id : porcentaje =</b> <i>expr</i> <b>;</b> <i>evaluaciones</i> <b>}</b></li>
+<li><span class="op">⇒<sup>*</sup><sub>lm</sub></span><b>curso id { id : porcentaje = num_ent ;</b> <i>evaluaciones</i> <b>}</b></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id { id : porcentaje = num_ent ;</b> <i>evaluacion</i> <b>}</b></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id { id : porcentaje = num_ent ; id : porcentaje</b> <i>notaOpcional</i> <b>; }</b></li>
+<li><span class="op">⇒<sub>lm</sub></span><b>curso id { id : porcentaje = num_ent ; id : porcentaje ; }</b></li>
+</ol></div>
+
+<!-- ============ 6 ============ -->
+<h1><span class="num">6.</span>Analizador semántico</h1>
+<p>Se implementó con un <i>Visitor</i> de ANTLR y una tabla de símbolos con ámbitos anidados (bloques y
+<code>para</code>), que guarda nombre, tipo, ámbito y línea de cada identificador. Errores verificados:</p>
+<table>
+<tr><th style="width:6%">Cód.</th><th style="width:43%">Error semántico</th><th>Ejemplo que lo produce</th></tr>
+<tr><td><span class="badge">E1</span></td><td>Identificador (variable o curso) no declarado</td><td><code>b = a + 1;</code> sin declarar <code>b</code></td></tr>
+<tr><td><span class="badge">E2</span></td><td>Identificador ya declarado en el mismo ámbito, o evaluación repetida</td><td><code>var x : entero; var x : decimal;</code></td></tr>
+<tr><td><span class="badge">E3</span></td><td>Tipos incompatibles en asignación (solo se admite entero → decimal)</td><td><code>var edad : entero = 3.5;</code></td></tr>
+<tr><td><span class="badge">E4</span></td><td>Condición de <code>si</code> / <code>mientras</code> que no es <code>logico</code></td><td><code>si (n) { … }</code> con <code>n</code> entero</td></tr>
+<tr><td><span class="badge">E5</span></td><td>Los pesos de un curso no suman 100&nbsp;%</td><td><code>curso Q { PC1 : 30%; EF : 50%; }</code></td></tr>
+<tr><td><span class="badge">E6</span></td><td>Nota fuera del rango [0, 20]</td><td><code>T1 : 50% = 25;</code></td></tr>
+<tr><td><span class="badge">E7</span></td><td>Evaluación inexistente o identificador que no es curso</td><td><code>Ingles.ESCRITO = 15;</code></td></tr>
+<tr><td><span class="badge">E8</span></td><td>Operación con tipos incompatibles</td><td><code>var r : decimal = "a" * 2;</code></td></tr>
+</table>
+
+<!-- ============ 7 ============ -->
+<h1><span class="num">7.</span>Implementación y pruebas</h1>
+<div class="flujo">
+  <div class="paso"><b>Programa</b>archivo .nota</div><div class="flecha">→</div>
+  <div class="paso"><b>Léxico</b>NotaLangLexer</div><div class="flecha">→</div>
+  <div class="paso"><b>Sintáctico</b>NotaLangParser</div><div class="flecha">→</div>
+  <div class="paso"><b>Semántico</b>Visitor + tabla de símbolos</div><div class="flecha">→</div>
+  <div class="paso"><b>Resultado</b>OK o errores con línea</div>
+</div>
+<p>Ejecución: <code>make</code> y <code>python3 main.py archivo.nota [--tokens | --arbol | --tabla]</code>.
+<code>make test</code> ejecuta los 16 archivos de prueba de <code>tests/</code>:</p>
+<table style="break-inside: avoid">
+<tr><th style="width:15%">Analizador</th><th style="width:37%">Entradas</th><th>Resultado</th></tr>
+<tr><td><b>Léxico</b></td><td><code>ok1</code>–<code>ok3</code> (<code>--tokens</code>), <code>err_lex1</code>, <code>err_lex2</code></td><td>Tokens correctos; detecta <code>#</code> (1:19) y la comilla sin cerrar (1:21)</td></tr>
+<tr><td><b>Sintáctico</b></td><td><code>ok1</code>–<code>ok3</code>, <code>err_sin1</code>–<code>err_sin3</code></td><td>Acepta los válidos; detecta <code>;</code> faltante, <code>)</code> faltante y curso sin evaluaciones</td></tr>
+<tr><td><b>Semántico</b></td><td><code>ok1</code>–<code>ok3</code>, <code>err_sem1</code>–<code>err_sem8</code></td><td>Válidos sin errores; cada <code>err_semN</code> reporta el error EN con su línea</td></tr>
+</table>
+
+<h2>Ejemplos de ejecución</h2>
+<div class="dos">
+<div><pre class="consola"><span class="pr">$ python3 main.py tests/ok3_mientras.nota \
+    --tabla</span>
+Análisis léxico y sintáctico: OK
+=== TABLA DE SÍMBOLOS ===
+ global  Calculo  curso   línea 1
+   evaluaciones={'PC': 40.0, 'EF': 60.0}
+ global  ef       entero  línea 6
+ global  ok       logico  línea 7
+<span class="ok">Análisis semántico: OK</span></pre></div>
+<div><pre class="consola"><span class="pr">$ python3 main.py tests/err_sem5_pesos.nota</span>
+Análisis léxico y sintáctico: OK
+=== ERRORES SEMÁNTICOS ===
+<span class="er">[Error Semántico E5, línea 1] Los pesos del
+ curso 'Quimica' suman 80% (deben sumar 100%)</span>
+<span class="pr">$ python3 main.py tests/err_sin1.nota</span>
+=== ERRORES SINTÁCTICOS ===
+<span class="er">[Error Sintáctico, línea 2:0]
+ missing ';' at 'mostrar'</span></pre></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,3 @@
+var t : texto = "a";
+var r : decimal = t * 2;
+var b : logico = 3 y verdadero;

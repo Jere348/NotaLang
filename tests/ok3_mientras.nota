@@ -1,0 +1,13 @@
+curso Calculo {
+    PC : 40% = 9;
+    EF : 60%;
+}
+// subir la nota del EF de 1 en 1 hasta aprobar
+var ef : entero = 0;
+var ok : logico = falso;
+mientras (no ok y ef <= 20) {
+    Calculo.EF = ef;
+    ok = promedio(Calculo) >= 10.5;
+    ef = ef + 1;
+}
+mostrar("Nota minima en EF: ", ef - 1, " (", 7 mod 2, ")");
