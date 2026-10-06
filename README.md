@@ -28,4 +28,5 @@ make test                              # corre todas las pruebas
 E1 no declarado · E2 redeclarado · E3 tipos en asignación · E4 condición no lógica ·
 E5 pesos ≠ 100 % · E6 nota fuera de [0, 20] · E7 evaluación inexistente / no es curso · E8 operación inválida
 
-
+## Video demo
+https://youtu.be/acxQxc8Cwto
