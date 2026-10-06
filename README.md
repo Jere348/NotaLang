@@ -10,7 +10,6 @@ y calcular promedios ponderados (`promedio`) y la nota necesaria para aprobar (`
 | `gen/` | Lexer/Parser/Visitor generados por ANTLR con `make` |
 | `semantic/` | Tabla de símbolos y analizador semántico (Visitor) |
 | `main.py` | Driver: léxico → sintáctico → semántico |
-| `derivaciones.py` | Derivaciones más a la izquierda |
 | `tests/` | Entradas válidas (`ok*`) y con errores léxicos, sintácticos y semánticos (`err_*`) |
 | `docs/` | Informe, Anexo A (derivaciones) y presentación en PDF |
 
@@ -23,8 +22,6 @@ y calcular promedios ponderados (`promedio`) y la nota necesaria para aprobar (`
 make                                   # genera gen/ (ANTLR_JAR=/ruta/al.jar si está en otra ruta)
 python3 main.py tests/ok1_curso.nota --tokens --tabla
 make test                              # corre todas las pruebas
-python3 derivaciones.py                # derivaciones más a la izquierda
-make informe                           # regenera el informe y el anexo (pip install weasyprint)
 ```
 
 ## Errores semánticos verificados

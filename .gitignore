@@ -3,3 +3,7 @@ __pycache__/
 gen/
 docs/_anexo.html
 docs/derivaciones.html
+derivaciones.py
+docs/*.html
+docs/*.css
+docs/*.md
